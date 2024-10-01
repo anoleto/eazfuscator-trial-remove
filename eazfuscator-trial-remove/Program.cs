@@ -29,8 +29,8 @@ namespace eaztrialremove
                 .Select(instr => instr.Operand as MethodReference)
                 .FirstOrDefault()?.Resolve();
 
-            if (calledMethod != null) { Console.WriteLine($"Found called method: {calledMethod.FullName}"); RemoveInstructions(calledMethod.Body); } // BRO
-            else Console.WriteLine("No method call found in the entry point.");
+            if (calledMethod != null && calledMethod.ReturnType.FullName == "System.Void") { Console.WriteLine($"Found called method: {calledMethod.FullName}"); RemoveInstructions(calledMethod.Body); } // BRO
+            else { Console.WriteLine("No method call found in the entry point. Trying to remove call, brtrue.s, and ret instructions directly...."); RemoveInstructions(entryPoint.Body); }
 
             try { assembly.Write(modifiedAssemblyPath); Console.WriteLine($"Modified assembly saved to: {modifiedAssemblyPath}"); }
             catch (Exception ex) { Console.WriteLine($"Failed to write assembly: {ex.Message}"); }
