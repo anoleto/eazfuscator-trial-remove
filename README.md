@@ -8,8 +8,12 @@ clone the repo
 git clone https://github.com/ldci4/eazfuscator-trial-remove.git
 ```
 
-build the project on visual studio and run the executable.
-_or just go to [release](https://github.com/ldci4/eazfuscator-trial-remove/releases/tag/release) tab to download and use it._
+build the project on visual studio. _or just go to [release](https://github.com/ldci4/eazfuscator-trial-remove/releases/tag/release) tab to download and use it._ <br/>
+drag the assembly to the executeable or use cmd and run
+```sh
+eazfuscator-trial-remove.exe path/to/assembly
+```
 
 ### Requirements
-.NET Framework 4.7.2 or higher Windows OS
+.NET Framework 4.7.2 or higher <br/>
+Windows OS
