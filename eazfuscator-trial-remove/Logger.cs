@@ -4,20 +4,18 @@ namespace eaztrialremove
 {
     internal class Logger
     {
-        public static void Log(string text, ConsoleColor color = ConsoleColor.White)
+        private static void WriteLine(string prefix, string text, ConsoleColor color)
         {
             Console.ForegroundColor = color;
-            Console.WriteLine($"[L]{text}");
+            Console.WriteLine($"{prefix}{text}");
             Console.ResetColor();
         }
-
+        public static void Log(string text, ConsoleColor color = ConsoleColor.White) => WriteLine("[L]", text, color);
         public static void LogVerbose(string text, ConsoleColor color)
         {
             if (!Config.v) return;
 
-            Console.ForegroundColor = color;
-            Console.WriteLine($"[V]{text}");
-            Console.ResetColor();
+            WriteLine("[V]", text, color);
         }
     }
 }
