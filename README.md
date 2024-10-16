@@ -13,6 +13,10 @@ drag the assembly to the executeable or use cmd and run
 ```sh
 eazfuscator-trial-remove.exe path/to/assembly
 ```
+or you can use --dnlib arg to use dnlib library instead
+```sh
+eazfuscator-trial-remove.exe path/to/assembly --dnlib
+```
 
 ### Requirements
 .NET Framework 4.7.2 or higher <br/>
