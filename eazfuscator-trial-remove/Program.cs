@@ -1,115 +1,86 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using System;
+﻿using System;
 using System.IO;
-using System.Linq;
 
 namespace eaztrialremove
 {
     class Program
     {
-        static bool v = false; // verbose
-
+        static Config configHandler = new Config();
+        static instructionHandler instructionHandler = new instructionHandler();
         static void Main(string[] args)
         {
-            if (args.Length == 0)
+            configHandler.Parse(args);
+
+            if (configHandler.Path.Count == 0)
             {
-                Log("Please drop an assembly or paste assembly path to modify. --v for more output.", ConsoleColor.Red);
+                Logger.Log("Please drop an assembly or paste assembly path to modify. --v for more output. --dnlib to use dnlib instead of mono.", ConsoleColor.Red);
                 return;
             }
 
-            if (args.Contains("--v"))
-                v = true;
-                args = args.Where(arg => arg != "--v").ToArray();
-
-            foreach (var assemblyPath in args)
+            foreach (var assemblyPath in configHandler.Path)
             {
                 if (!File.Exists(assemblyPath) || !assemblyPath.EndsWith("exe") && !assemblyPath.EndsWith("dll"))
                 {
-                    Log($"The specified assembly file {assemblyPath} does not exist.", ConsoleColor.Red);
+                    Logger.Log($"The specified assembly file {assemblyPath} does not exist.", ConsoleColor.Red);
                     continue;
                 }
 
-                Process(assemblyPath);
+                if (configHandler.dnlib) ProcessDnlib(assemblyPath); else ProcessMono(assemblyPath);
             }
 
-            Log("Press any key to exit...");
+            Logger.Log("Press any key to exit...");
             Console.ReadKey();
         }
 
-        static void Process(string assemblyPath)
+        // shoulda make this two to a new class so it look lil clean
+        static void ProcessMono(string assemblyPath)
         {
-            string modifiedAssemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}_{Path.GetExtension(assemblyPath)}");
+            Logger.LogVerbose($"Processing with Mono.Cecil: {assemblyPath}", ConsoleColor.Green);
 
-            LogVerbose($"Original Assembly Path: {assemblyPath}", ConsoleColor.Green);
-            LogVerbose($"Modified Assembly Path: {modifiedAssemblyPath}", ConsoleColor.Green);
+            string modifiedAssemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}_cecil{Path.GetExtension(assemblyPath)}");
 
-            var assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
+            var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly(assemblyPath);
             var entryPoint = assembly.EntryPoint ?? throw new InvalidOperationException("No entry point found in the assembly.");
 
-            LogVerbose($"Entry point method: {entryPoint.FullName} {entryPoint.MetadataToken}", ConsoleColor.Green);
-            LogVerbose($"Total instructions in entry point: {entryPoint.Body.Instructions.Count}", ConsoleColor.Green);
-
-            MethodDefinition calledMethod = entryPoint.Body.Instructions
-                .Where(instr => instr.OpCode == OpCodes.Call)
-                .Select(instr => instr.Operand as MethodReference)
-                .FirstOrDefault()?.Resolve();
-
-            if (calledMethod != null && calledMethod.ReturnType.FullName == "System.Void")
-            {
-                LogVerbose($"Found called method: {calledMethod.FullName} {calledMethod.MetadataToken}", ConsoleColor.Green);
-                LogVerbose($"Total instructions in called method: {calledMethod.Body.Instructions.Count}", ConsoleColor.Green);
-                RemoveInstructions(calledMethod.Body);
-            }
-            else
-            {
-                LogVerbose("No method call found in the entry point. Trying to remove trial call instructions directly...", ConsoleColor.Cyan);
-                RemoveInstructions(entryPoint.Body);
-            }
+            Logger.LogVerbose($"Entry point method: {entryPoint.FullName} {entryPoint.MetadataToken}", ConsoleColor.Green);
+            instructionHandler.RemoveInstrMono(entryPoint.Body);
 
             try
             {
                 assembly.Write(modifiedAssemblyPath);
-                Log($"Modified assembly saved to: {modifiedAssemblyPath}", ConsoleColor.Green);
+                Logger.Log($"Modified assembly saved to: {modifiedAssemblyPath}", ConsoleColor.Green);
             }
             catch (Exception ex)
             {
-                Log($"Failed to write assembly: {ex.Message}", ConsoleColor.Red);
-                LogVerbose($"Stack Trace: {ex.StackTrace}", ConsoleColor.Red);
+                Logger.Log($"Failed to write assembly: {ex.Message}", ConsoleColor.Red);
+                Logger.LogVerbose($"Stack Trace: {ex.StackTrace}", ConsoleColor.Red);
                 File.Delete(modifiedAssemblyPath);
             }
         }
 
-        static void RemoveInstructions(MethodBody methodBody)
+        static void ProcessDnlib(string assemblyPath)
         {
-            var ilProcessor = methodBody.GetILProcessor();
-            var instructionsToRemove = methodBody.Instructions
-                .Where(instr => instr.OpCode == OpCodes.Call || instr.OpCode == OpCodes.Brtrue_S || instr.OpCode == OpCodes.Ret)
-                .Take(3).ToList();
+            Logger.LogVerbose($"Processing with dnlib: {assemblyPath}", ConsoleColor.Green);
 
-            foreach (var instruction in instructionsToRemove)
+            string modifiedAssemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}_dnlib{Path.GetExtension(assemblyPath)}");
+
+            var module = dnlib.DotNet.ModuleDefMD.Load(assemblyPath);
+            var entryPoint = module.EntryPoint ?? throw new InvalidOperationException("No entry point found in the assembly.");
+
+            Logger.LogVerbose($"Entry point method: {entryPoint.FullName} {entryPoint.MDToken}", ConsoleColor.Green);
+            instructionHandler.RemoveInstrDnlib(entryPoint.Body);
+
+            try
             {
-                LogVerbose($"Removing instruction: {instruction.OpCode} at {instruction.Offset} ({instruction})", ConsoleColor.Yellow);
-                ilProcessor.Remove(instruction);
+                module.Write(modifiedAssemblyPath);
+                Logger.Log($"Modified assembly saved to: {modifiedAssemblyPath}", ConsoleColor.Green);
             }
-
-            LogVerbose("Instructions successfully removed.", ConsoleColor.Green);
-        }
-
-        static void Log(string text, ConsoleColor color = ConsoleColor.White)
-        {
-            Console.ForegroundColor = color;
-            Console.WriteLine(text);
-            Console.ResetColor();
-        }
-
-        static void LogVerbose(string text, ConsoleColor color)
-        {
-            if (!v) return;
-
-            Console.ForegroundColor = color;
-            Console.WriteLine(text);
-            Console.ResetColor();
+            catch (Exception ex)
+            {
+                Logger.Log($"Failed to write assembly: {ex.Message}", ConsoleColor.Red);
+                Logger.LogVerbose($"Stack Trace: {ex.StackTrace}", ConsoleColor.Red);
+                File.Delete(modifiedAssemblyPath);
+            }
         }
     }
 }
