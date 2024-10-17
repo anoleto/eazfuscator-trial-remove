@@ -8,7 +8,7 @@ clone the repo
 git clone https://github.com/anoleto/eazfuscator-trial-remove.git
 ```
 
-build the project on visual studio. _or just go to [release](https://github.com/anoleto/eazfuscator-trial-remove/releases) tab to download and use it._ <br/>
+build the project on visual studio or dotnet build on cli. _or just go to [release](https://github.com/anoleto/eazfuscator-trial-remove/releases) tab to download and use it._ <br/>
 
 drag the assembly to the executeable or use cmd and run
 ```sh
@@ -26,6 +26,6 @@ eazfuscator-trial-remove.exe assembly assembly2 --dnlib
 .NET Framework 4.7.2 or higher <br/>
 Windows OS
 
-# Todo
+### Todo
 - to make this useable on dlls
 - more cleanup
