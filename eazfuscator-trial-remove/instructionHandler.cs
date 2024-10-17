@@ -47,7 +47,7 @@ namespace eaztrialremove
             }
         }
 
-        public void rvMono(Mono.Cecil.Cil.MethodBody methodBody) // now this two the method that removes the trial call
+        private void rvMono(Mono.Cecil.Cil.MethodBody methodBody) // now this two the method that removes the trial call
         {
             var ilProcessor = methodBody.GetILProcessor();
             var instructionsToRemove = methodBody.Instructions
@@ -65,7 +65,7 @@ namespace eaztrialremove
             Logger.Log("Instructions successfully removed.", ConsoleColor.Green);
         }
 
-        public void rvDnlib(CilBody body)
+        private void rvDnlib(CilBody body)
         {
             var instructionsToRemove = body.Instructions
                 .Where(instr => instr.OpCode == dnlib.DotNet.Emit.OpCodes.Call ||

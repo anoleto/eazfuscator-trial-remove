@@ -25,3 +25,7 @@ eazfuscator-trial-remove.exe assembly assembly2 --dnlib
 ### Requirements
 .NET Framework 4.7.2 or higher <br/>
 Windows OS
+
+# Todo
+- to make this useable on dlls
+- more cleanup

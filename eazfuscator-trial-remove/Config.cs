@@ -28,7 +28,7 @@ namespace eaztrialremove
 
         public void getHelp()
         {
-            Logger.Log($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} assembly.exe || lib.dll", ConsoleColor.DarkCyan);
+            Logger.Log($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} assembly.exe", ConsoleColor.DarkCyan);
             Logger.Log("Other argument:", ConsoleColor.DarkCyan);
             Logger.Log("--v || --verbose: Provides more detailed or extra output", ConsoleColor.Cyan);
             Logger.Log("--dnlib: Uses dnlib library instead of Mono.Cecil", ConsoleColor.Cyan);

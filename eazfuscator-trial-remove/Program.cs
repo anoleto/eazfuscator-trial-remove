@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 
 namespace eaztrialremove
 {
@@ -19,7 +18,7 @@ namespace eaztrialremove
 
             foreach (var assemblyPath in configHandler.path)
             {
-                if (!File.Exists(assemblyPath) || !assemblyPath.EndsWith("exe") && !assemblyPath.EndsWith("dll"))
+                if (!File.Exists(assemblyPath) || !assemblyPath.EndsWith("exe"))
                 {
                     configHandler.getHelp();
                     continue;
