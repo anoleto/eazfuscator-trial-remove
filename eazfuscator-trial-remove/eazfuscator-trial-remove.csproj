@@ -61,6 +61,7 @@
     <Compile Include="Config.cs" />
     <Compile Include="instructionHandler.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="Process.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

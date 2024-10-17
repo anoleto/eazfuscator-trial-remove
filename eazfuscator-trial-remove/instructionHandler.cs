@@ -22,7 +22,7 @@ namespace eaztrialremove
             }
             else
             {
-                Logger.LogVerbose("No method call found. Removing trial call instructions directly...", ConsoleColor.Cyan);
+                Logger.Log("No method call found. Removing trial call instructions directly...", ConsoleColor.Cyan);
                 rvMono(methodBody);
             }
         }
@@ -42,7 +42,7 @@ namespace eaztrialremove
             }
             else
             {
-                Logger.LogVerbose("No method call found. Removing trial call instructions directly...", ConsoleColor.Cyan);
+                Logger.Log("No method call found. Removing trial call instructions directly...", ConsoleColor.Cyan);
                 rvDnlib(body);
             }
         }
