@@ -32,7 +32,6 @@ namespace eaztrialremove
             Logger.Log("Other argument:", ConsoleColor.DarkCyan);
             Logger.Log("--v || --verbose: Provides more detailed or extra output", ConsoleColor.Cyan);
             Logger.Log("--dnlib: Uses dnlib library instead of Mono.Cecil", ConsoleColor.Cyan);
-            Logger.Log("--h || --help: Get this message", ConsoleColor.Cyan);
         }
     }
 }
