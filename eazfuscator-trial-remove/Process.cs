@@ -12,7 +12,7 @@ namespace eaztrialremove
         {
             Logger.Log($"Processing with Mono.Cecil: {assemblyPath}", ConsoleColor.Green);
 
-            string modifiedAssemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}_cecil{Path.GetExtension(assemblyPath)}");
+            string modifiedAssemblyPath = Config.overwrite ? assemblyPath : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}_cecil{Path.GetExtension(assemblyPath)}");
             var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly(assemblyPath);
             var entryPoint = assembly.EntryPoint ?? throw new InvalidOperationException("No entry point found in the assembly.");
 
@@ -26,7 +26,7 @@ namespace eaztrialremove
         {
             Logger.Log($"Processing with dnlib: {assemblyPath}", ConsoleColor.Green);
 
-            string modifiedAssemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}_dnlib{Path.GetExtension(assemblyPath)}");
+            string modifiedAssemblyPath = Config.overwrite ? assemblyPath : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}_dnlib{Path.GetExtension(assemblyPath)}");
             var module = ModuleDefMD.Load(assemblyPath);
             var entryPoint = module.EntryPoint ?? throw new InvalidOperationException("No entry point found in the assembly.");
 
@@ -40,7 +40,7 @@ namespace eaztrialremove
         {
             Logger.Log($"Processing with dnlib: {assemblyPath}", ConsoleColor.Green);
 
-            string modifiedAssemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}_l{Path.GetExtension(assemblyPath)}");
+            string modifiedAssemblyPath = Config.overwrite ? assemblyPath : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Path.GetFileNameWithoutExtension(assemblyPath)}_l{Path.GetExtension(assemblyPath)}");
             var module = ModuleDefMD.Load(assemblyPath);
 
             instructionHandler.legacyinstrRemove(module);
@@ -48,27 +48,36 @@ namespace eaztrialremove
             WriteDnlib(module, modifiedAssemblyPath);
         }
 
-        private static void WriteMono(Mono.Cecil.AssemblyDefinition assembly, string path)
+        private static void WriteMono(Mono.Cecil.AssemblyDefinition assembly, string path) => Write(() => assembly.Write(getTmp(path)), path);
+        private static void WriteDnlib(ModuleDefMD module, string path) => Write(() => module.Write(getTmp(path)), path);
+        private static string getTmp(string path) => Path.Combine(Path.GetTempPath(), $"{Path.GetFileName(path)}.tmp");
+
+        private static void Write(Action writeAction, string path)
         {
             if (!Config.writeAsm) return;
 
-            try { assembly.Write(path); Logger.Log($"Modified assembly saved to: {path}", ConsoleColor.Green); }
-            catch (Exception ex) { HandleErr(path, ex); }
-        }
+            string tmp = getTmp(path);
 
-        private static void WriteDnlib(ModuleDefMD module, string path)
-        {
-            if (!Config.writeAsm) return;
+            try
+            {
+                writeAction();
+                if (Config.overwrite) File.Replace(tmp, path, null);
+                else
+                {
+                    if (File.Exists(path)) File.Delete(path);
+                    File.Move(tmp, path);
+                }
 
-            try { module.Write(path); Logger.Log($"Modified assembly saved to: {path}", ConsoleColor.Green); }
-            catch (Exception ex) { HandleErr(path, ex); }
+                Logger.Log($"Modified assembly saved to: {path}", ConsoleColor.Green);
+            }
+            catch (Exception ex) { HandleErr(tmp, ex); }
         }
 
         private static void HandleErr(string path, Exception ex)
         {
             Logger.Log($"Failed to write assembly: {ex.Message}", ConsoleColor.Red);
             Logger.LogVerbose($"Stack Trace: {ex.StackTrace}", ConsoleColor.Red);
-            File.Delete(path);
+            if (File.Exists(path)) File.Delete(path);
         }
     }
 }

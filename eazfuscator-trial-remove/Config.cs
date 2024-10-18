@@ -11,6 +11,7 @@ namespace eaztrialremove
         public bool dnlib { get; private set; } // whether to use dnlib or mono
         public static bool v { get; private set; } // verbose
         public bool legacy { get; private set; }
+        public static bool overwrite { get; set; }
         public static bool writeAsm { get; set; }
         public List<string> path { get; private set; } // get path
         public Config() => path = new List<string>();
@@ -29,6 +30,10 @@ namespace eaztrialremove
                 legacy = true;
                 args = args.Where(arg => arg != "--l").ToArray();
 
+            if (args.Contains("--ov"))
+                overwrite = true;
+                args = args.Where(arg => arg != "--ov").ToArray();
+
             path.AddRange(args);
         }
 
@@ -39,6 +44,7 @@ namespace eaztrialremove
             Logger.Log("--v || --verbose: Provides more detailed or extra output", ConsoleColor.Cyan);
             Logger.Log("--dnlib: Uses dnlib library instead of Mono.Cecil", ConsoleColor.Cyan);
             Logger.Log("--l: Old way to remove/disable the trial check. should work with dlls too (haven't tested)", ConsoleColor.Cyan);
+            Logger.Log("--ov: Overwrite filename when writing");
         }
     }
 }
