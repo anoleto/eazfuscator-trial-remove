@@ -2,15 +2,20 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Linq;
 
 namespace eaztrialremove
 {
     class Config
     {
+        [ConfigHandler("Uses dnlib library instead of Mono.Cecil", "dnlib")]
         public bool dnlib { get; private set; } // whether to use dnlib or mono
+        [ConfigHandler("Provides more detailed or extra output", "v", "verbose")]
         public static bool v { get; private set; } // verbose
+        [ConfigHandler("Old way to remove/disable the trial check. should work with dlls too (haven't tested)", "l", "old")]
         public bool legacy { get; private set; }
+        [ConfigHandler("Overwrite filename when writing", "ov", "overwrite")]
         public static bool overwrite { get; set; }
         public static bool writeAsm { get; set; }
         public List<string> path { get; private set; } // get path
@@ -20,13 +25,26 @@ namespace eaztrialremove
         {
             var arg = new List<string>(args);
 
-            if (arg.Remove("--v") || arg.Remove("--verbose")) v = true;
+            var options = GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
+                .Where(prop => Attribute.IsDefined(prop, typeof(ConfigHandler)))
+                .Select(prop => new
+                {
+                    Attribute = (ConfigHandler)Attribute.GetCustomAttribute(prop, typeof(ConfigHandler)),
+                    Property = prop
+                });
 
-            if (arg.Remove("--dnlib")) dnlib = true;
-
-            if (arg.Remove("--l")) legacy = true;
-
-            if (arg.Remove("--ov") || arg.Remove("--overwrite")) overwrite = true;
+            foreach (var option in options)
+            {
+                foreach (var a in option.Attribute.Arg)
+                {
+                    if (arg.Remove(a))
+                    {
+                        if (option.Property.PropertyType == typeof(bool)) option.Property.SetValue(this, true);
+                        break;
+                    }
+                }
+            }
 
             path.AddRange(arg);
         }
@@ -35,10 +53,17 @@ namespace eaztrialremove
         {
             Logger.Log($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} assembly.exe || assembly.dll", ConsoleColor.DarkCyan);
             Logger.Log("Other argument:", ConsoleColor.DarkCyan);
-            Logger.Log("--v || --verbose: Provides more detailed or extra output", ConsoleColor.Cyan);
-            Logger.Log("--dnlib: Uses dnlib library instead of Mono.Cecil", ConsoleColor.Cyan);
-            Logger.Log("--l: Old way to remove/disable the trial check. should work with dlls too (haven't tested)", ConsoleColor.Cyan);
-            Logger.Log("--ov || --overwrite: Overwrite filename when writing", ConsoleColor.Cyan);
+
+            var options = GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
+                .Where(prop => Attribute.IsDefined(prop, typeof(ConfigHandler)))
+                .Select(prop => new
+                {
+                    Attribute = (ConfigHandler)Attribute.GetCustomAttribute(prop, typeof(ConfigHandler)),
+                    Property = prop
+                });
+
+            foreach (var option in options) Logger.Log($"{string.Join(" || ", option.Attribute.Arg)}: {option.Attribute.Desc}", ConsoleColor.Cyan);
         }
     }
 }
