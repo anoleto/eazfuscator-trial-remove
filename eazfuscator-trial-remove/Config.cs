@@ -20,17 +20,13 @@ namespace eaztrialremove
         {
             var arg = new List<string>(args);
 
-            if (arg.Remove("--v") || arg.Remove("--verbose"))
-                v = true;
+            if (arg.Remove("--v") || arg.Remove("--verbose")) v = true;
 
-            if (arg.Remove("--dnlib"))
-                dnlib = true;
+            if (arg.Remove("--dnlib")) dnlib = true;
 
-            if (arg.Remove("--l"))
-                legacy = true;
+            if (arg.Remove("--l")) legacy = true;
 
-            if (arg.Remove("--ov") || arg.Remove("--overwrite"))
-                overwrite = true;
+            if (arg.Remove("--ov") || arg.Remove("--overwrite")) overwrite = true;
 
             path.AddRange(arg);
         }
