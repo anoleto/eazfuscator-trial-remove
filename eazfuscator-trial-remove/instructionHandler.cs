@@ -94,24 +94,17 @@ namespace eaztrialremove
                 if (!type.IsClass || !type.IsAbstract || !type.IsSealed || !type.IsNotPublic) continue; //Logger.LogVerbose($"Type {type.FullName} != internal static class.", ConsoleColor.Red);
 
                 // != 4 i think for older version of eaz
-                if (!type.HasMethods || type.Methods.Count != 7) continue; //Logger.LogVerbose($"Type {type.FullName} != 7, found: {type.Methods.Count}.", ConsoleColor.Red);
+                if (!type.HasMethods || type.Methods.Count != 7) {
+                    Logger.LogVerbose($"Class {type.FullName} doesn't have 7 methods, found: {type.Methods.Count}.", ConsoleColor.Red);
+                    continue;
+                } else { Logger.LogVerbose($"Class check matched, {type.FullName} 0x{type.MDToken}", ConsoleColor.Cyan); }
 
                 var methods = type.Methods.ToList();
-
-                int boolCount = methods.Count(m => m.HasReturnType && m.ReturnType.FullName == "System.Boolean");
-                int voidCount = methods.Count(m => m.HasReturnType && m.ReturnType.FullName == "System.Void");
 
                 foreach (var method in methods)
                 {
                     if (!method.HasBody) continue;
                     var instr = method.Body.Instructions;
-
-                    if (method.ReturnType.FullName == "System.Boolean" && method.Parameters.Count == 0 &&
-                        (instr.Count < 3 || 
-                         instr[1].OpCode == OpCodes.Ldc_I4_1 && 
-                         instr[2].OpCode == OpCodes.Call && 
-                         instr[3].OpCode == OpCodes.Ret))
-                        continue;
 
                     if (instr.Count >= 3 && 
                         instr[instr.Count - 3].OpCode == OpCodes.Ldc_I4_0 &&
@@ -121,13 +114,14 @@ namespace eaztrialremove
                         Logger.LogVerbose($"{method.FullName} 0x{method.MDToken} matched instruction.", ConsoleColor.Cyan);
                         instr.Clear();
 
-                        instr.Add(OpCodes.Ldc_I4_1.ToInstruction());
-                        instr.Add(OpCodes.Ret.ToInstruction());
+                        instr.Add(OpCodes.Ldc_I4_1.ToInstruction()); Logger.LogVerbose("Adding Ldc.i4.1 instruction", ConsoleColor.Yellow);
+                        instr.Add(OpCodes.Ret.ToInstruction()); Logger.LogVerbose("Adding Ret instruction", ConsoleColor.Yellow);
+
                         Logger.Log($"Instructions successfully initialized", ConsoleColor.Green);
                         Found = true;
                         Config.writeAsm = true;
                         break;
-                    }
+                    } else { Logger.LogVerbose($"Instructions not matched, {method.FullName} has {instr.Count} instructions.", ConsoleColor.Red); }
                 }
 
                 if (Found) return;

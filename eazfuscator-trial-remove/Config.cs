@@ -25,16 +25,7 @@ namespace eaztrialremove
         {
             var arg = new List<string>(args);
 
-            var options = GetType()
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
-                .Where(prop => Attribute.IsDefined(prop, typeof(ConfigHandler)))
-                .Select(prop => new
-                {
-                    Attribute = (ConfigHandler)Attribute.GetCustomAttribute(prop, typeof(ConfigHandler)),
-                    Property = prop
-                });
-
-            foreach (var option in options)
+            foreach (var option in getOption())
             {
                 foreach (var a in option.Attribute.Arg)
                 {
@@ -54,7 +45,12 @@ namespace eaztrialremove
             Logger.Log($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} assembly.exe || assembly.dll", ConsoleColor.DarkCyan);
             Logger.Log("Other argument:", ConsoleColor.DarkCyan);
 
-            var options = GetType()
+            foreach (var option in getOption()) Logger.Log($"{string.Join(" || ", option.Attribute.Arg)}: {option.Attribute.Desc}", ConsoleColor.Cyan);
+        }
+
+        private IEnumerable<dynamic> getOption()
+        {
+            return GetType()
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
                 .Where(prop => Attribute.IsDefined(prop, typeof(ConfigHandler)))
                 .Select(prop => new
@@ -62,8 +58,6 @@ namespace eaztrialremove
                     Attribute = (ConfigHandler)Attribute.GetCustomAttribute(prop, typeof(ConfigHandler)),
                     Property = prop
                 });
-
-            foreach (var option in options) Logger.Log($"{string.Join(" || ", option.Attribute.Arg)}: {option.Attribute.Desc}", ConsoleColor.Cyan);
         }
     }
 }
