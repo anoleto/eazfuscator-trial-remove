@@ -18,13 +18,13 @@ namespace eaztrialremove
 
             foreach (var assemblyPath in configHandler.path)
             {
-                if (!File.Exists(assemblyPath) || !assemblyPath.EndsWith("exe"))
+                if (!File.Exists(assemblyPath) || !assemblyPath.EndsWith("exe") && !assemblyPath.EndsWith("dll"))
                 {
                     configHandler.getHelp();
                     continue;
                 }
 
-                if (configHandler.dnlib) ProcessAsm.ProcessDnlib(assemblyPath); else ProcessAsm.ProcessMono(assemblyPath);
+                if (configHandler.dnlib) ProcessAsm.ProcessDnlib(assemblyPath); else if (configHandler.legacy) ProcessAsm.ProcessLegacy(assemblyPath); else ProcessAsm.ProcessMono(assemblyPath);
             }
 
             Logger.Log("Press any key to exit...");

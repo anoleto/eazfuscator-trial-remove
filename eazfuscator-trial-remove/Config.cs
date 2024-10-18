@@ -10,6 +10,8 @@ namespace eaztrialremove
     {
         public bool dnlib { get; private set; } // whether to use dnlib or mono
         public static bool v { get; private set; } // verbose
+        public bool legacy { get; private set; }
+        public static bool writeAsm { get; set; }
         public List<string> path { get; private set; } // get path
         public Config() => path = new List<string>();
 
@@ -23,15 +25,20 @@ namespace eaztrialremove
                 dnlib = true;
                 args = args.Where(arg => arg != "--dnlib").ToArray();
 
+            if (args.Contains("--l"))
+                legacy = true;
+                args = args.Where(arg => arg != "--l").ToArray();
+
             path.AddRange(args);
         }
 
         public void getHelp()
         {
-            Logger.Log($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} assembly.exe", ConsoleColor.DarkCyan);
+            Logger.Log($"Usage: {Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName)} assembly.exe || assembly.dll", ConsoleColor.DarkCyan);
             Logger.Log("Other argument:", ConsoleColor.DarkCyan);
             Logger.Log("--v || --verbose: Provides more detailed or extra output", ConsoleColor.Cyan);
             Logger.Log("--dnlib: Uses dnlib library instead of Mono.Cecil", ConsoleColor.Cyan);
+            Logger.Log("--l: Old way to remove/disable the trial check. should work with dlls too (haven't tested)", ConsoleColor.Cyan);
         }
     }
 }
