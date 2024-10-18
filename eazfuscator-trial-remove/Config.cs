@@ -18,23 +18,21 @@ namespace eaztrialremove
 
         public void Parse(string[] args)
         {
-            if (args.Contains("--v") || args.Contains("--verbose"))
+            var arg = new List<string>(args);
+
+            if (arg.Remove("--v") || arg.Remove("--verbose"))
                 v = true;
-                args = args.Where(arg => arg != "--v" && arg != "--verbose").ToArray();
 
-            if (args.Contains("--dnlib"))
+            if (arg.Remove("--dnlib"))
                 dnlib = true;
-                args = args.Where(arg => arg != "--dnlib").ToArray();
 
-            if (args.Contains("--l"))
+            if (arg.Remove("--l"))
                 legacy = true;
-                args = args.Where(arg => arg != "--l").ToArray();
 
-            if (args.Contains("--ov"))
+            if (arg.Remove("--ov") || arg.Remove("--overwrite"))
                 overwrite = true;
-                args = args.Where(arg => arg != "--ov").ToArray();
 
-            path.AddRange(args);
+            path.AddRange(arg);
         }
 
         public void getHelp()
@@ -44,7 +42,7 @@ namespace eaztrialremove
             Logger.Log("--v || --verbose: Provides more detailed or extra output", ConsoleColor.Cyan);
             Logger.Log("--dnlib: Uses dnlib library instead of Mono.Cecil", ConsoleColor.Cyan);
             Logger.Log("--l: Old way to remove/disable the trial check. should work with dlls too (haven't tested)", ConsoleColor.Cyan);
-            Logger.Log("--ov: Overwrite filename when writing", ConsoleColor.Cyan);
+            Logger.Log("--ov || --overwrite: Overwrite filename when writing", ConsoleColor.Cyan);
         }
     }
 }
